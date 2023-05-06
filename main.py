@@ -1,7 +1,9 @@
 import cv2
 from flirpy.camera.boson import Boson
 from PyQt6 import QtWidgets, QtGui, QtCore
-import numpy as np
+
+from ui.colormap_selector import ColormapSelector
+from utils import apply_colormap
 
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -13,14 +15,15 @@ class MyWindow(QtWidgets.QMainWindow):
         self.label = QtWidgets.QLabel()
         self.setCentralWidget(self.label)
 
-        self.screenshot_button = QtWidgets.QPushButton("Take Screenshot")
-        self.screenshot_button.clicked.connect(self.take_screenshot)
+        screenshot_button = QtWidgets.QPushButton("Take Screenshot")
+        screenshot_button.clicked.connect(self.take_screenshot)
 
-        colormap_button = QtWidgets.QPushButton("Change Colormap")
-        colormap_button.clicked.connect(self.change_colormap)
+        colormap_selector = ColormapSelector(self)
 
-        self.addToolBar("Main").addWidget(self.screenshot_button)
-        self.addToolBar("Main").addWidget(colormap_button)
+        main_toolbar = self.addToolBar("Main")
+        main_toolbar.setMovable(False)
+        main_toolbar.addWidget(screenshot_button)
+        main_toolbar.addWidget(colormap_selector)
 
         self.boson = Boson()
         self.colormap = None
@@ -41,7 +44,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Read a frame from the webcam
         frame = self.boson.grab()
 
-        frame = self.apply_colormap(frame)
+        frame = apply_colormap(frame, self.colormap)
 
         # Create a QImage from the frame
         image = QtGui.QImage(
@@ -62,16 +65,14 @@ class MyWindow(QtWidgets.QMainWindow):
         # Release the VideoCapture object and stop the QTimer when the window is closed
         self.stop_video()
         event.accept()
-
-    def apply_colormap(self, frame):
-        if self.colormap is not None:
-            return cv2.applyColorMap(frame.astype(np.uint8), self.colormap)
-        return frame
+    
+    def change_colormap(self, colormap):
+        self.colormap = colormap
 
     def take_screenshot(self):
         frame = self.boson.grab()
 
-        img = self.apply_colormap(frame)
+        img = apply_colormap(frame, self.colormap)
 
         cv2.imwrite("screenshot.jpg", img)
 
@@ -80,9 +81,6 @@ class MyWindow(QtWidgets.QMainWindow):
             "Screenshot Saved",
             "The screenshot has been saved as 'screenshot.jpg'.",
         )
-
-    def change_colormap(self):
-        self.colormap = cv2.COLORMAP_INFERNO
 
 if __name__ == "__main__":
     import sys
