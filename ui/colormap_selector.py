@@ -1,5 +1,5 @@
 import cv2
-from PyQt6.QtWidgets import QComboBox, QWidget
+from PyQt6.QtWidgets import QComboBox
 
 colormaps = {
     "Default": None,

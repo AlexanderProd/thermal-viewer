@@ -18,11 +18,15 @@ class MyWindow(QtWidgets.QMainWindow):
         screenshot_button = QtWidgets.QPushButton("Take Screenshot")
         screenshot_button.clicked.connect(self.take_screenshot)
 
+        recording_button = QtWidgets.QPushButton("Start/Stop Recording")
+        recording_button.clicked.connect(self.toggle_recording)
+
         colormap_selector = ColormapSelector(self)
 
         main_toolbar = self.addToolBar("Main")
         main_toolbar.setMovable(False)
         main_toolbar.addWidget(screenshot_button)
+        main_toolbar.addWidget(recording_button)        
         main_toolbar.addWidget(colormap_selector)
 
         self.boson = Boson()
@@ -31,6 +35,9 @@ class MyWindow(QtWidgets.QMainWindow):
         # Create a QTimer to update the video feed
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
+
+        self.recording = False
+        self.video_writer = None
 
     def start_video(self):
         # Start the QTimer to update the video feed at a desired interval
@@ -45,6 +52,9 @@ class MyWindow(QtWidgets.QMainWindow):
         frame = self.boson.grab()
 
         frame = apply_colormap(frame, self.colormap)
+
+        if self.recording:
+            self.handle_recording(frame)
 
         # Create a QImage from the frame
         image = QtGui.QImage(
@@ -81,6 +91,25 @@ class MyWindow(QtWidgets.QMainWindow):
             "Screenshot Saved",
             "The screenshot has been saved as 'screenshot.jpg'.",
         )
+    
+    def toggle_recording(self):
+        if self.recording is False:
+            self.recording = True
+        else:
+            self.video_writer.release()
+            self.video_writer = None
+            self.recording = False
+
+    def handle_recording(self, frame):
+        width = frame.shape[1]
+        height = frame.shape[0]
+
+        if self.video_writer is None:
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            self.video_writer = cv2.VideoWriter("recording.mp4", fourcc, 30, (width, height))
+        
+        self.video_writer.write(frame)
+            
 
 if __name__ == "__main__":
     import sys
