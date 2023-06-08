@@ -1,0 +1,1 @@
+pyinstaller --onefile --icon=ressources/icon.ico --name=ThermalViewer main.py
