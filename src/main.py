@@ -132,7 +132,7 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon("ressources/icon.ico"))
+    app.setWindowIcon(QtGui.QIcon("../ressources/icon.ico"))
     app.setStyle(QtWidgets.QStyleFactory.create("CleanLooks"))
     window = MyWindow()
     window.show()
