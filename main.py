@@ -1,7 +1,7 @@
 import cv2
 from flirpy.camera.boson import Boson
 from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtWidgets import QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QPushButton
 
 from ui.colormap_selector import ColormapSelector
 from ui.aspect_ratio_label import AspectRatioLabel
@@ -60,7 +60,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.timer.stop()
 
     def update_frame(self):
-        # Read a frame from the webcam
+        # Reading the frame using the Boson lib is currently not properly working when using on a Raspberry Pi
         # frame = self.boson.grab()
         _, frame = self.cap.read()
 
