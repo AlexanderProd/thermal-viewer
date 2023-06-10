@@ -22,6 +22,6 @@ class ColormapSelector(QComboBox):
         selected_colormap = list(available_colormaps.items())[index][1]
 
         # The parent of the ColormapSelector is the MainToolbar
-        parent = self.parent().parent()
+        parent = self.parent().parent().parent()
         if parent:
             parent.change_colormap(selected_colormap)

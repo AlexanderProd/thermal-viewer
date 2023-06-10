@@ -33,16 +33,11 @@ def apply_colormap(frame, colormap):
 
 
 def get_file_save_path(self):
-    home_dir = pathlib.Path.home()
-    video_dir = home_dir / "Videos"
-    folder_name = "thermal-viewer"
-    folder_path = video_dir / folder_name
-
-    if not folder_path.exists():
-        try:
-            folder_path.mkdir(parents=True)
-        except OSError as e:
-            print(f"Error creating folder: {e}")
+    folder_path = None
+    if self.output_directory is None:
+        folder_path = pathlib.Path.cwd()
+    else:
+        folder_path = pathlib.Path(self.output_directory)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

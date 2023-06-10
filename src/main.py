@@ -1,7 +1,8 @@
 import cv2
 from flirpy.camera.boson import Boson
 from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFileDialog
+from PyQt6.QtCore import QSettings
 
 from ui.colormap_selector import ColormapSelector
 from ui.aspect_ratio_label import AspectRatioLabel
@@ -24,14 +25,25 @@ class MyWindow(QtWidgets.QMainWindow):
         self.recording = False
         self.video_writer = None
 
+        self.settings = QSettings(
+            "./settings.ini",
+            QSettings.Format.IniFormat,
+        )
+        self.output_directory = self.settings.value("OutputDirectory", type=str)
+
     def init_ui(self):
         self.showFullScreen()
         self.setGeometry(0, 10, 640, 512)
         self.setWindowTitle("Thermal Viewer")
 
-        # Create a label to display the video feed
-        self.label = AspectRatioLabel()
-        self.setCentralWidget(self.label)
+        # Create a vertical layout for the toolbar and label
+        vertical_layout = QHBoxLayout()
+        vertical_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create a toolbar widget and add buttons to it
+        toolbar_widget = QWidget()
+        toolbar_layout = QVBoxLayout(toolbar_widget)
+        toolbar_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
 
         screenshot_button = QPushButton("Take Screenshot")
         screenshot_button.clicked.connect(self.take_screenshot)
@@ -41,15 +53,30 @@ class MyWindow(QtWidgets.QMainWindow):
 
         colormap_selector = ColormapSelector(self)
 
+        output_directory_button = QPushButton("Select Output Directory")
+        output_directory_button.clicked.connect(self.select_output_directory)
+
         quit_button = QPushButton("Quit")
         quit_button.clicked.connect(QtCore.QCoreApplication.quit)
 
-        main_toolbar = self.addToolBar("Main")
-        main_toolbar.setMovable(False)
-        main_toolbar.addWidget(screenshot_button)
-        main_toolbar.addWidget(recording_button)
-        main_toolbar.addWidget(colormap_selector)
-        main_toolbar.addWidget(quit_button)
+        toolbar_layout.addWidget(screenshot_button)
+        toolbar_layout.addWidget(recording_button)
+        toolbar_layout.addWidget(colormap_selector)
+        toolbar_layout.addWidget(output_directory_button)
+        toolbar_layout.addWidget(quit_button)
+
+        # Create a label to display the video feed
+        self.label = AspectRatioLabel()
+
+        # Add the toolbar and label to the vertical layout
+        vertical_layout.addWidget(self.label)
+        vertical_layout.addWidget(toolbar_widget)
+
+        # Create a central widget and set the vertical layout as its layout
+        central_widget = QWidget()
+        central_widget.setLayout(vertical_layout)
+
+        self.setCentralWidget(central_widget)
 
     def start_video(self):
         # Start the QTimer to update the video feed at a desired interval
@@ -92,8 +119,20 @@ class MyWindow(QtWidgets.QMainWindow):
     def change_colormap(self, colormap):
         self.colormap = colormap
 
+    def select_output_directory(self):
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        dialog.setDirectory(self.output_directory)
+
+        if dialog.exec():
+            selected_directory = dialog.selectedFiles()
+            if selected_directory:
+                self.output_directory = selected_directory[0]
+                self.settings.setValue("OutputDirectory", self.output_directory)
+
     def take_screenshot(self):
-        frame = self.boson.grab()
+        # frame = self.boson.grab()
+        _, frame = self.cap.read()
 
         img = apply_colormap(frame, self.colormap)
 
@@ -103,7 +142,7 @@ class MyWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.information(
             self,
             "Screenshot Saved",
-            "The screenshot has been saved as 'screenshot.jpg'.",
+            "The screenshot has been saved.",
         )
 
     def toggle_recording(self):
