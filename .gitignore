@@ -239,4 +239,4 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,virtualenv,macos
 
-settings.ini
+/settings.ini
