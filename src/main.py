@@ -48,8 +48,8 @@ class MyWindow(QtWidgets.QMainWindow):
         screenshot_button = QPushButton("Take Screenshot")
         screenshot_button.clicked.connect(self.take_screenshot)
 
-        recording_button = QPushButton("Start/Stop Recording")
-        recording_button.clicked.connect(self.toggle_recording)
+        self.recording_button = QPushButton("Start Recording")
+        self.recording_button.clicked.connect(self.toggle_recording)
 
         colormap_selector = ColormapSelector(self)
 
@@ -60,7 +60,7 @@ class MyWindow(QtWidgets.QMainWindow):
         quit_button.clicked.connect(QtCore.QCoreApplication.quit)
 
         toolbar_layout.addWidget(screenshot_button)
-        toolbar_layout.addWidget(recording_button)
+        toolbar_layout.addWidget(self.recording_button)
         toolbar_layout.addWidget(colormap_selector)
         toolbar_layout.addWidget(output_directory_button)
         toolbar_layout.addWidget(quit_button)
@@ -148,10 +148,12 @@ class MyWindow(QtWidgets.QMainWindow):
     def toggle_recording(self):
         if self.recording is False:
             self.recording = True
+            self.recording_button.setText("Stop Recording")
         else:
             self.video_writer.release()
             self.video_writer = None
             self.recording = False
+            self.recording_button.setText("Start Recording")
 
     def handle_recording(self, frame):
         width = frame.shape[1]
