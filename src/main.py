@@ -12,27 +12,28 @@ from utils import apply_colormap, get_file_save_path
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.init_ui()
-
+        
         self.cap = cv2.VideoCapture(0)
         self.boson = Boson()
         self.colormap = None
+        self.is_fullscreen = False
+        self.toolbar_widget = None
+        self.recording = False
+        self.video_writer = None
 
         # Create a QTimer to update the video feed
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
-
-        self.recording = False
-        self.video_writer = None
 
         self.settings = QSettings(
             "./settings.ini",
             QSettings.Format.IniFormat,
         )
         self.output_directory = self.settings.value("OutputDirectory", type=str)
+        
+        self.init_ui()
 
     def init_ui(self):
-        self.showFullScreen()
         self.setGeometry(0, 10, 640, 512)
         self.setWindowTitle("Thermal Viewer")
 
@@ -41,8 +42,8 @@ class MyWindow(QtWidgets.QMainWindow):
         vertical_layout.setContentsMargins(0, 0, 0, 0)
 
         # Create a toolbar widget and add buttons to it
-        toolbar_widget = QWidget()
-        toolbar_layout = QVBoxLayout(toolbar_widget)
+        self.toolbar_widget = QWidget()
+        toolbar_layout = QVBoxLayout(self.toolbar_widget)
         toolbar_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
 
         screenshot_button = QPushButton("Take Screenshot")
@@ -50,6 +51,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.recording_button = QPushButton("Start Recording")
         self.recording_button.clicked.connect(self.toggle_recording)
+
+        fullscreen_button = QPushButton("Fullscreen")
+        fullscreen_button.clicked.connect(self.toggle_fullscreen)
 
         colormap_selector = ColormapSelector(self)
 
@@ -61,16 +65,18 @@ class MyWindow(QtWidgets.QMainWindow):
 
         toolbar_layout.addWidget(screenshot_button)
         toolbar_layout.addWidget(self.recording_button)
+        toolbar_layout.addWidget(fullscreen_button)
         toolbar_layout.addWidget(colormap_selector)
         toolbar_layout.addWidget(output_directory_button)
         toolbar_layout.addWidget(quit_button)
 
         # Create a label to display the video feed
         self.label = AspectRatioLabel()
+        self.label.clicked.connect(self.handle_video_click)
 
         # Add the toolbar and label to the vertical layout
         vertical_layout.addWidget(self.label)
-        vertical_layout.addWidget(toolbar_widget)
+        vertical_layout.addWidget(self.toolbar_widget)
 
         # Create a central widget and set the vertical layout as its layout
         central_widget = QWidget()
@@ -167,6 +173,25 @@ class MyWindow(QtWidgets.QMainWindow):
             )
 
         self.video_writer.write(frame)
+
+    def toggle_fullscreen(self):
+        if not self.is_fullscreen:
+            self.showFullScreen()
+            self.toolbar_widget.hide()
+            self.is_fullscreen = True
+        else:
+            self.showNormal()
+            self.toolbar_widget.show()
+            self.is_fullscreen = False
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key.Key_Escape and self.is_fullscreen:
+            self.toggle_fullscreen()
+        super().keyPressEvent(event)
+
+    def handle_video_click(self):
+        if self.is_fullscreen:
+            self.toggle_fullscreen()
 
 
 if __name__ == "__main__":
