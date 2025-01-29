@@ -7,8 +7,8 @@ class AspectRatioLabel(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(640, 480)  # Set minimum size to match default video size
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumWidth(640)  # Set minimum width only
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._pixmap = None
 
     def setPixmap(self, pixmap):
